@@ -7,8 +7,9 @@ const app = express();
 // Configurar CORS para permitir todas las conexiones
 app.use(cors({ origin: "*" }));
 
-// Middleware agresivo anti-caché
+// Middleware para prevenir la caché
 app.use((req, res, next) => {
+  // Asegurar que la caché no se almacene en ningún lugar
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '-1');
@@ -18,7 +19,7 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-    // Añadir un timestamp a la respuesta para verificar que se está ejecutando el código
+    // Confirmación de que el servidor está funcionando
     res.send(`Servidor funcionando en Vercel - Proxy para API Coinalyze - ${new Date().toISOString()}`);
 });
 
@@ -44,7 +45,7 @@ async function fetchCoinalyzeData() {
     console.log(`Desde: ${new Date(fromTimestamp * 1000).toISOString()}`);
     console.log(`Hasta: ${new Date(toTimestamp * 1000).toISOString()} (último minuto completo)`);
     
-    // Añadir un nonce aleatorio para romper cualquier caché
+    // URL de Coinalyze con el nonce para evitar caché
     const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${fromTimestamp}&to=${toTimestamp}&convert_to_usd=false&nonce=${nonce}`;
     
     console.log(`Haciendo solicitud a Coinalyze [${nonce}]: ${new Date().toISOString()}`);
@@ -52,7 +53,7 @@ async function fetchCoinalyzeData() {
     
     const response = await fetch(url, {
         headers: {
-            'Cache-Control': 'no-cache, no-store',
+            'Cache-Control': 'no-cache, no-store', // Asegurarse de no cachear la respuesta
             'Pragma': 'no-cache'
         }
     });
@@ -76,7 +77,7 @@ async function fetchCoinalyzeData() {
     };
 }
 
-// Ruta para descarga directa de liquidaciones
+// Ruta para descargar los datos frescos de liquidaciones
 app.get("/liquidaciones/download", async (req, res) => {
     try {
         const responseData = await fetchCoinalyzeData();
@@ -108,7 +109,7 @@ app.get("/liquidaciones/download", async (req, res) => {
             .replace(/\.\d+Z$/, '')
             .replace(/:/g, '-');
             
-        const filename = `c_${formattedDate}.json`;
+        const filename = `liquidaciones_btc_${formattedDate}.json`;
         
         console.log(`Nombre de archivo generado: ${filename}`);
         console.log(`Basado en el timestamp: ${lastTimestamp} (${lastDate.toISOString()})`);
@@ -140,7 +141,7 @@ app.options("*", (req, res) => {
     res.send();
 });
 
-// Iniciar el servidor en el puerto especificado
+// Iniciar el servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
