@@ -30,15 +30,22 @@ async function fetchCoinalyzeData() {
     // Calcular el rango de tiempo: desde hace 1 día hasta el último minuto completo
     const now = new Date();
     
-    // Establecer los segundos y milisegundos a cero para obtener el último minuto completo
+    // Establecer los segundos y milisegundos a cero
     now.setSeconds(0);
     now.setMilliseconds(0);
+    
+    // Restar 1 minuto para obtener el último minuto completo (no el actual en curso)
+    now.setMinutes(now.getMinutes() - 1);
     
     // Convertir a timestamp de Unix (segundos)
     const toTimestamp = Math.floor(now.getTime() / 1000);
     
     // Calcular timestamp de hace 1 día exacto (en segundos)
     const fromTimestamp = toTimestamp - (24 * 60 * 60);
+    
+    console.log(`Rango de tiempo calculado:`);
+    console.log(`Desde: ${new Date(fromTimestamp * 1000).toISOString()}`);
+    console.log(`Hasta: ${new Date(toTimestamp * 1000).toISOString()} (último minuto completo)`);
     
     // Añadir un nonce aleatorio para romper cualquier caché
     const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${fromTimestamp}&to=${toTimestamp}&convert_to_usd=false&nonce=${nonce}`;
@@ -217,7 +224,7 @@ app.get("/liquidaciones/download/:timestamp", async (req, res) => {
             .replace(/\.\d+Z$/, '')
             .replace(/:/g, '-');
             
-        const filename = `@_${formattedDate}.json`;
+        const filename = `l--${formattedDate}.json`;
         
         console.log(`Nombre de archivo generado: ${filename}`);
         console.log(`Basado en el timestamp: ${lastTimestamp} (${lastDate.toISOString()})`);
