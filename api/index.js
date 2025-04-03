@@ -34,9 +34,6 @@ async function fetchCoinalyzeData() {
     now.setSeconds(0);
     now.setMilliseconds(0);
     
-    // Restar 1 minuto para obtener el último minuto completo (no el actual en curso)
-    now.setMinutes(now.getMinutes() - 1);
-    
     // Convertir a timestamp de Unix (segundos)
     const toTimestamp = Math.floor(now.getTime() / 1000);
     
@@ -79,61 +76,7 @@ async function fetchCoinalyzeData() {
     };
 }
 
-// Ruta principal de liquidaciones ahora con parámetro forzado
-app.get("/liquidaciones", async (req, res) => {
-    try {
-        const responseData = await fetchCoinalyzeData();
-
-        // Agregar encabezados CORS y anti-caché manualmente
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-        
-        // Encabezados agresivos anti-caché
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '-1');
-
-        res.json(responseData);
-    } catch (error) {
-        console.error("Error en la solicitud:", error);
-        res.status(500).json({ 
-            error: "Error al obtener los datos", 
-            details: error.message,
-            timestamp: new Date().toISOString() 
-        });
-    }
-});
-
-// Nueva ruta que incluye un timestamp en la URL para forzar respuestas frescas
-app.get("/liquidaciones/:timestamp", async (req, res) => {
-    // El parámetro timestamp no se usa realmente, solo sirve para romper la caché
-    const timestamp = req.params.timestamp;
-    console.log(`Solicitud recibida con timestamp: ${timestamp}`);
-    
-    try {
-        const responseData = await fetchCoinalyzeData();
-
-        // Agregar encabezados CORS y anti-caché manualmente
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-
-        res.json(responseData);
-    } catch (error) {
-        console.error("Error en la solicitud:", error);
-        res.status(500).json({ 
-            error: "Error al obtener los datos", 
-            details: error.message,
-            timestamp: new Date().toISOString() 
-        });
-    }
-});
-
-// Ruta para descarga directa
+// Ruta para descarga directa de liquidaciones
 app.get("/liquidaciones/download", async (req, res) => {
     try {
         const responseData = await fetchCoinalyzeData();
@@ -165,66 +108,7 @@ app.get("/liquidaciones/download", async (req, res) => {
             .replace(/\.\d+Z$/, '')
             .replace(/:/g, '-');
             
-        const filename = `liquidaciones_btc_${formattedDate}.json`;
-        
-        console.log(`Nombre de archivo generado: ${filename}`);
-        console.log(`Basado en el timestamp: ${lastTimestamp} (${lastDate.toISOString()})`);
-        
-        // Encabezados para forzar la descarga y evitar caché
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-        
-        // Enviar los datos como un archivo para descargar
-        res.json(responseData);
-    } catch (error) {
-        console.error("Error en la solicitud:", error);
-        res.status(500).json({ 
-            error: "Error al obtener los datos para descarga", 
-            details: error.message,
-            timestamp: new Date().toISOString() 
-        });
-    }
-});
-
-// Descarga con timestamp para forzar respuestas frescas
-app.get("/liquidaciones/download/:timestamp", async (req, res) => {
-    const timestamp = req.params.timestamp;
-    console.log(`Solicitud de descarga recibida con timestamp: ${timestamp}`);
-    
-    try {
-        const responseData = await fetchCoinalyzeData();
-        
-        // Encontrar el último registro de liquidación de todos los símbolos
-        let lastTimestamp = 0;
-        
-        if (responseData.data && responseData.data.length > 0) {
-            responseData.data.forEach(item => {
-                if (item.history && item.history.length > 0) {
-                    // Ordenar el historial por timestamp (t) en orden descendente
-                    const sortedHistory = [...item.history].sort((a, b) => b.t - a.t);
-                    // Tomar el timestamp más alto (el más reciente)
-                    const highestTimestamp = sortedHistory[0].t;
-                    
-                    if (highestTimestamp > lastTimestamp) {
-                        lastTimestamp = highestTimestamp;
-                    }
-                }
-            });
-        }
-        
-        // Crear fecha a partir del último timestamp
-        const lastDate = new Date(lastTimestamp * 1000);
-        
-        // Formatear la fecha para el nombre del archivo (YYYY-MM-DD_HH-MM-SS)
-        const formattedDate = lastDate.toISOString()
-            .replace('T', '_')
-            .replace(/\.\d+Z$/, '')
-            .replace(/:/g, '-');
-            
-        const filename = `l--${formattedDate}.json`;
+        const filename = `c_${formattedDate}.json`;
         
         console.log(`Nombre de archivo generado: ${filename}`);
         console.log(`Basado en el timestamp: ${lastTimestamp} (${lastDate.toISOString()})`);
@@ -254,6 +138,12 @@ app.options("*", (req, res) => {
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     res.send();
+});
+
+// Iniciar el servidor en el puerto especificado
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
 
 module.exports = app;
