@@ -9,12 +9,12 @@ app.use(cors({ origin: "*" }));
 
 // Middleware para prevenir la caché
 app.use((req, res, next) => {
-  // Asegurar que la caché no se almacene en ningún lugar
+  // Aseguramos que la caché no se almacene en ningún lugar
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '-1');
   res.set('Surrogate-Control', 'no-store');
-  res.set('X-Accel-Expires', '0');  // Para Nginx
+  res.set('X-Accel-Expires', '0');  // Para Nginx y otros proxies
   next();
 });
 
@@ -45,8 +45,9 @@ async function fetchCoinalyzeData() {
     console.log(`Desde: ${new Date(fromTimestamp * 1000).toISOString()}`);
     console.log(`Hasta: ${new Date(toTimestamp * 1000).toISOString()} (último minuto completo)`);
     
-    // URL de Coinalyze con el nonce para evitar caché
-    const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${fromTimestamp}&to=${toTimestamp}&convert_to_usd=false&nonce=${nonce}`;
+    // Agregar un parámetro "cache_busting" extra en la URL para romper la caché
+    const timestamp = new Date().getTime();  // Este es un valor único basado en la hora actual
+    const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${fromTimestamp}&to=${toTimestamp}&convert_to_usd=false&nonce=${nonce}&cache_busting=${timestamp}`;
     
     console.log(`Haciendo solicitud a Coinalyze [${nonce}]: ${new Date().toISOString()}`);
     console.log(`URL: ${url}`);
