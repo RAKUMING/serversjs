@@ -24,10 +24,10 @@ async function fetchFreshCoinalyzeData() {
   now.setMilliseconds(0);
   const toTimestamp = Math.floor(now.getTime() / 1000);
   const fromTimestamp = toTimestamp - (24 * 60 * 60);
-  const apiKey = process.env.COINALYZE_API_KEY;
-  if (!apiKey) {
-    throw new Error("Configuración incompleta: falta la API Key de Coinalyze.");
-  }
+  
+  // API key hardcodeada directamente en el código
+  const apiKey = "6ec37cee-3e7a-4dfa-b35c-c91c8e9d9252";
+  
   const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=${apiKey}&symbols=BTCUSDT_PERP.A&interval=1min&from=${fromTimestamp}&to=${toTimestamp}&convert_to_usd=false&nonce=${nonce}&cache_busting=${cacheBuster}`;
 
   try {
