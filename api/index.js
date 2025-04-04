@@ -6,11 +6,15 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
+  // Paso 1: Borrar la caché del servidor
+  res.setHeader("Cache-Control", "no-store");
+
   const apiKey = process.env.COINALYZE_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: "API Key missing" });
   }
 
+  // Paso 2: Hacer el llamado a la API de Coinalyze y obtener el archivo de liquidaciones
   const now = new Date();
   now.setSeconds(0);
   now.setMilliseconds(0);
@@ -38,6 +42,7 @@ module.exports = async (req, res) => {
 
     const data = await response.json();
 
+    // Paso 3: Extraer el último valor de t y convertirlo a hora normal
     let lastTimestamp = 0;
     if (data?.data?.length > 0) {
       data.data.forEach(item => {
@@ -51,19 +56,22 @@ module.exports = async (req, res) => {
       });
     }
 
+    // Convertir timestamp a hora normal
     const referenceTimestamp = lastTimestamp || Math.floor(Date.now() / 1000);
     const formattedDate = new Date(referenceTimestamp * 1000)
       .toISOString()
       .slice(0, 19)
-      .replace("T", "_")
+      .replace("T", " ")
       .replace(/:/g, "-");
 
-    const filename = `liquidaciones_${formattedDate}.json`;
+    // Paso 4: Mostrar en pantalla el último timestamp convertido y la notificación del servidor
+    console.log(`Servidor corriendo en Vercel. Último timestamp del JSON: ${formattedDate}`);
 
-    res.setHeader("Cache-Control", "no-store");
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.setHeader("Content-Type", "application/json");
-    return res.status(200).json(data);
+    // Enviar la respuesta con el último timestamp y el mensaje
+    return res.status(200).json({
+      message: "Servidor corriendo en Vercel.",
+      lastTimestamp: formattedDate,
+    });
   } catch (err) {
     return res.status(500).json({ error: "Server error", details: err.message });
   }
