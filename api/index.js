@@ -208,7 +208,7 @@ app.get("/liquidaciones/download", async (req, res) => {
       .replace(/\.\d+Z$/, '')
       .replace(/:/g, '-');
 
-    const filename = `@_${formattedDate}.json`;
+    const filename = `N_${formattedDate}.json`;
 
     console.log(`Nombre de archivo generado: ${filename}`);
     console.log(`Basado en el timestamp: ${lastTimestamp} (${lastDate.toISOString()})`);
