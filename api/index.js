@@ -42,24 +42,17 @@ app.get("/liquidaciones", async (req, res) => {
       }
     });
 
-    // Ordenamos por tiempo ASCENDENTE (para la tabla HTML)
-    liquidations.sort((a, b) => new Date(a.time) - new Date(b.time));
+    // --- Cambio: Ordenamos por tiempo DESCENDENTE (más reciente primero) ---
+    liquidations.sort((a, b) => new Date(b.time) - new Date(a.time));
     const lastUpdate = new Date().toISOString();
-
-    // --- Inicio Cambios para CSV ---
 
     // Creamos el CSV con las columnas renombradas (usando ISO time)
     const csvHeader = "time,long,short";
-    // Creamos el cuerpo del CSV ordenando los datos DESCENDENTE (más reciente primero)
-    // Usamos slice() para no modificar el array original 'liquidations' que está ordenado ascendente para la tabla
+    // El array 'liquidations' ya está ordenado DESCENDENTE
     const csvBody = liquidations
-                      .slice() // Creamos una copia superficial
-                      .reverse() // Revertimos la copia (ahora es descendente)
-                      .map(l => `${l.time},${l.long},${l.short}`) // Mapeamos la copia revertida
+                      .map(l => `${l.time},${l.long},${l.short}`) // Mapeamos directamente
                       .join("\n");
     const csv = `${csvHeader}\n${csvBody}`;
-
-    // --- Fin Cambios para CSV ---
 
     // Si se solicita descarga
     if (download !== undefined) {
@@ -68,7 +61,7 @@ app.get("/liquidaciones", async (req, res) => {
       return res.send(csv); // Enviamos el CSV ordenado descendente
     }
 
-    // Mostramos HTML con tabla (usa el array 'liquidations' original ordenado ASCENDENTE)
+    // Mostramos HTML con tabla (usa el array 'liquidations' ordenado DESCENDENTE)
     const tableHeaders = ["time", "long", "short"]; // Headers para la tabla
     let html = `<h2>Liquidaciones BTC - Últimas 24h</h2>
                 <p>Última actualización: ${lastUpdate}</p>
@@ -79,7 +72,7 @@ app.get("/liquidaciones", async (req, res) => {
                   </thead>
                   <tbody>`;
 
-    // Usar los datos procesados para la tabla HTML (orden ASCENDENTE)
+    // Usar los datos procesados para la tabla HTML (orden DESCENDENTE)
     liquidations.forEach(l => {
         // Usar timeShort para la tabla, mantener valores numéricos
         const rowData = [l.timeShort, l.long, l.short];
@@ -89,7 +82,7 @@ app.get("/liquidaciones", async (req, res) => {
 
     html += `</tbody></table>`;
 
-    res.send(html); // Enviamos el HTML con la tabla ordenada ascendente
+    res.send(html); // Enviamos el HTML con la tabla ordenada descendente
 
   } catch (error) {
     console.error("Error:", error);
