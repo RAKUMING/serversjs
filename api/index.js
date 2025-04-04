@@ -25,16 +25,16 @@ export default async function handler(req, res) {
   // Si ambos valores están vacíos, llama a la API
   if (cache.price === null && cache.time === null) {
     try {
-      const response = await fetch('https://api.coincap.io/v2/assets/bitcoin');
+      const response = await fetch('https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT');
 
       if (!response.ok) {
-        throw new Error('Error al obtener datos de CoinCap');
+        throw new Error('Error al obtener datos de OKX');
       }
 
       const data = await response.json();
       const now = new Date().toISOString();
 
-      cache.price = parseFloat(data.data.priceUsd).toFixed(2);
+      cache.price = parseFloat(data.data[0].last).toFixed(2);
       cache.time = now;
 
       res.setHeader('Content-Type', 'text/html');
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       `);
     } catch (err) {
       console.error(err);
-      res.status(500).send('Error al consultar CoinCap');
+      res.status(500).send('Error al consultar OKX');
     }
   }
 }
