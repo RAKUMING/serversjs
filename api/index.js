@@ -4,37 +4,16 @@ const cors = require("cors");
 
 const app = express();
 
+// Permitir CORS desde cualquier origen
 app.use(cors({ origin: "*" }));
 
+// Evitar caché
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private, proxy-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
   res.set('Surrogate-Control', 'no-store');
   next();
-});
-
-app.get("/api", async (req, res) => {
-  try {
-    const freshData = await fetchFreshCoinalyzeData();
-    let lastTimestamp = 0;
-    if (freshData && freshData.data && Array.isArray(freshData.data) && freshData.data.length > 0) {
-      freshData.data.forEach(item => {
-        if (item.history && Array.isArray(item.history) && item.history.length > 0) {
-          const lastHistoryItem = item.history[item.history.length - 1];
-          lastTimestamp = lastHistoryItem.t;
-        }
-      });
-    }
-    const lastDate = new Date(lastTimestamp * 1000);
-    res.send(`Servidor Proxy Coinalyze funcionando en Vercel - ${new Date().toISOString()} - Última liquidación: ${lastDate.toLocaleString()}`);
-  } catch (error) {
-    res.status(500).json({
-      error: "Error al obtener datos de Coinalyze.",
-      details: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
 });
 
 async function fetchFreshCoinalyzeData() {
@@ -69,6 +48,44 @@ async function fetchFreshCoinalyzeData() {
   }
 }
 
+// Ruta principal - ahora devuelve directamente los datos de Coinalyze
+app.get("/", async (req, res) => {
+  try {
+    const freshData = await fetchFreshCoinalyzeData();
+    res.status(200).json(freshData);
+  } catch (error) {
+    res.status(500).json({
+      error: "Error al obtener datos de Coinalyze.",
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Mantener la ruta /api para compatibilidad
+app.get("/api", async (req, res) => {
+  try {
+    const freshData = await fetchFreshCoinalyzeData();
+    let lastTimestamp = 0;
+    if (freshData && freshData.data && Array.isArray(freshData.data) && freshData.data.length > 0) {
+      freshData.data.forEach(item => {
+        if (item.history && Array.isArray(item.history) && item.history.length > 0) {
+          const lastHistoryItem = item.history[item.history.length - 1];
+          lastTimestamp = lastHistoryItem.t;
+        }
+      });
+    }
+    const lastDate = new Date(lastTimestamp * 1000);
+    res.json(freshData); // Cambio aquí: devolver los datos en JSON en lugar de texto
+  } catch (error) {
+    res.status(500).json({
+      error: "Error al obtener datos de Coinalyze.",
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 app.get("/api/liquidaciones/download", async (req, res) => {
   try {
     const freshData = await fetchFreshCoinalyzeData();
@@ -95,6 +112,26 @@ app.get("/api/liquidaciones/download", async (req, res) => {
       details: error.message,
       timestamp: new Date().toISOString()
     });
+  }
+});
+
+// Añadir una ruta para ver el estado
+app.get("/status", async (req, res) => {
+  try {
+    const freshData = await fetchFreshCoinalyzeData();
+    let lastTimestamp = 0;
+    if (freshData && freshData.data && Array.isArray(freshData.data) && freshData.data.length > 0) {
+      freshData.data.forEach(item => {
+        if (item.history && Array.isArray(item.history) && item.history.length > 0) {
+          const lastHistoryItem = item.history[item.history.length - 1];
+          lastTimestamp = lastHistoryItem.t;
+        }
+      });
+    }
+    const lastDate = new Date(lastTimestamp * 1000);
+    res.send(`Servidor Proxy Coinalyze funcionando en Vercel - ${new Date().toISOString()} - Última liquidación: ${lastDate.toLocaleString()}`);
+  } catch (error) {
+    res.status(500).send(`Error al obtener datos: ${error.message}`);
   }
 });
 
