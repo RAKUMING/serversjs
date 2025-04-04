@@ -18,6 +18,10 @@ export default async function handler(req, res) {
   // Si no es /download, actualiza el precio desde Binance
   try {
     const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+    if (!response.ok) {
+      throw new Error('Error al obtener datos de Binance');
+    }
+
     const data = await response.json();
 
     const now = new Date().toISOString();
