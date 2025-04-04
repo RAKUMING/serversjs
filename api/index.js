@@ -25,28 +25,28 @@ export default async function handler(req, res) {
   // Si ambos valores están vacíos, llama a la API
   if (cache.price === null && cache.time === null) {
     try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+      const response = await fetch('https://api.coincap.io/v2/assets/bitcoin');
 
       if (!response.ok) {
-        throw new Error('Error al obtener datos de CoinGecko');
+        throw new Error('Error al obtener datos de CoinCap');
       }
 
       const data = await response.json();
       const now = new Date().toISOString();
 
-      cache.price = data.bitcoin.usd;
+      cache.price = parseFloat(data.data.priceUsd).toFixed(2);
       cache.time = now;
 
       res.setHeader('Content-Type', 'text/html');
       return res.status(200).send(`
         <h2>Último descargado:</h2>
-        <p><strong>Precio:</strong> $${data.bitcoin.usd}</p>
+        <p><strong>Precio:</strong> $${cache.price}</p>
         <p><strong>Hora:</strong> ${now}</p>
         <p>Servidor corriendo correctamente..</p>
       `);
     } catch (err) {
       console.error(err);
-      res.status(500).send('Error al consultar CoinGecko');
+      res.status(500).send('Error al consultar CoinCap');
     }
   }
 }
