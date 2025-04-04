@@ -21,17 +21,12 @@ app.get("/api", async (req, res) => {
     if (freshData && freshData.data && Array.isArray(freshData.data) && freshData.data.length > 0) {
       freshData.data.forEach(item => {
         if (item.history && Array.isArray(item.history) && item.history.length > 0) {
-          const maxTsInHistory = item.history.reduce((max, current) => {
-            const ts = Number(current.t);
-            return !isNaN(ts) ? Math.max(max, ts) : max;
-          }, 0);
-          lastTimestamp = Math.max(lastTimestamp, maxTsInHistory);
+          const lastHistoryItem = item.history[item.history.length - 1];
+          lastTimestamp = lastHistoryItem.t;
         }
       });
     }
-    const referenceTimestamp = lastTimestamp || Math.floor(Date.now() / 1000);
-    const lastDate = new Date(referenceTimestamp * 1000);
-    const formattedDate = lastDate.toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
+    const lastDate = new Date(lastTimestamp * 1000);
     res.send(`Servidor Proxy Coinalyze funcionando en Vercel - ${new Date().toISOString()} - Última liquidación: ${lastDate.toLocaleString()}`);
   } catch (error) {
     res.status(500).json({
@@ -81,11 +76,8 @@ app.get("/api/liquidaciones/download", async (req, res) => {
     if (freshData && freshData.data && Array.isArray(freshData.data) && freshData.data.length > 0) {
       freshData.data.forEach(item => {
         if (item.history && Array.isArray(item.history) && item.history.length > 0) {
-          const maxTsInHistory = item.history.reduce((max, current) => {
-            const ts = Number(current.t);
-            return !isNaN(ts) ? Math.max(max, ts) : max;
-          }, 0);
-          lastTimestamp = Math.max(lastTimestamp, maxTsInHistory);
+          const lastHistoryItem = item.history[item.history.length - 1];
+          lastTimestamp = lastHistoryItem.t;
         }
       });
     }
