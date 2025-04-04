@@ -2,11 +2,30 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.js",
+      "src": "api/index.js",  // Asegúrate que la ruta a tu archivo principal de Express sea correcta
       "use": "@vercel/node"
     }
   ],
   "routes": [
+    // Tu ruta actual que dirige todo a tu API (mantenla si es correcta)
     { "src": "/(.*)", "dest": "/api/index.js" }
+  ],
+  // --- AÑADE ESTA SECCIÓN ---
+  "headers": [
+    {
+      // Aplica estas cabeceras específicamente a la ruta de descarga
+      "source": "/liquidaciones/download",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private, proxy-revalidate, max-age=0" },
+        { "key": "Pragma", "value": "no-cache" }, // Compatibilidad HTTP/1.0
+        { "key": "Expires", "value": "0" },      // Compatibilidad caches antiguos
+        { "key": "Surrogate-Control", "value": "no-store" } // Para CDNs/Proxies
+        // Puedes añadir más cabeceras si es necesario
+      ]
+    }
+    // Podrías añadir más bloques aquí para otras rutas si necesitaran
+    // cabeceras específicas distintas a las de /liquidaciones/download
+    // o a las predeterminadas de Vercel.
   ]
+  // --- FIN DE LA SECCIÓN AÑADIDA ---
 }
