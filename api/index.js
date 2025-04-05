@@ -1,71 +1,71 @@
 const express = require("express");
-const fetch = require("node-fetch"); // Use require for node-fetch v2 if using CommonJS
+const fetch = require("node-fetch"); // Usa require para node-fetch v2 si usas CommonJS
 const cors = require("cors");
 
 const app = express();
 app.use(cors({ origin: "*" }));
 
-// --- In-memory cache - Initialized as empty ---
-let liquidationsCache = []; // Stores processed data {time, timeShort, long, short}
-let csvCache = "";          // Stores the generated CSV string
-let lastUpdateCache = null; // Stores the Date object of the last successful update
+// --- Caché en memoria - Inicializada vacía ---
+let liquidationsCache = []; // Almacena datos procesados {time, timeShort, long, short}
+let csvCache = "";          // Almacena la cadena CSV generada
+let lastUpdateCache = null; // Almacena el objeto Date de la última actualización exitosa
 
 app.get("/liquidaciones", async (req, res) => {
-    const download = req.query.download !== undefined; // True if download param exists
+    const download = req.query.download !== undefined; // Verdadero si el parámetro download existe
 
-    // --- Download Request Logic ---
+    // --- Lógica de Solicitud de Descarga ---
     if (download) {
-        // If cache is empty, return error as per the example flow
-        if (!csvCache || liquidationsCache.length === 0) { // Check both just in case
-            console.log("DOWNLOAD request failed: Cache is empty.");
+        // Si la caché está vacía, devuelve error según el flujo de ejemplo
+        if (!csvCache || liquidationsCache.length === 0) { // Comprobar ambos por si acaso
+            console.log("Solicitud de DESCARGA fallida: La caché está vacía.");
             return res.status(400).send('No hay datos de liquidaciones almacenados. Visite /liquidaciones (sin "?download") para actualizar.');
         }
 
-        // If cache has data, serve the CSV
-        console.log("SERVING CSV FROM CACHE for download.");
+        // Si la caché tiene datos, sirve el CSV
+        console.log("SIRVIENDO CSV DESDE CACHÉ para descarga.");
         res.setHeader("Content-Disposition", `attachment; filename="liquidaciones_btc_${Date.now()}.csv"`);
         res.setHeader("Content-Type", "text/csv");
-        return res.send(csvCache); // Send cached CSV
+        return res.send(csvCache); // Enviar CSV cacheado
     }
 
-    // --- HTML View Request Logic ---
-    // This part only runs if 'download' parameter is NOT present
+    // --- Lógica de Solicitud de Vista HTML ---
+    // Esta parte solo se ejecuta si el parámetro 'download' NO está presente
 
-    console.log("HTML VIEW request received.");
+    console.log("Solicitud de VISTA HTML recibida.");
 
-    // 1. Check if cache has data and clear it (as per example flow)
+    // 1. Comprobar si la caché tiene datos y limpiarla (según el flujo de ejemplo)
     if (liquidationsCache.length > 0 || csvCache || lastUpdateCache) {
-        console.log("Cache contains data. Clearing cache before fetching...");
+        console.log("La caché contiene datos. Limpiando caché antes de buscar...");
         liquidationsCache = [];
         csvCache = "";
         lastUpdateCache = null;
     } else {
-        console.log("Cache is already empty. Proceeding to fetch...");
+        console.log("La caché ya está vacía. Procediendo a buscar...");
     }
 
-    // 2. Always attempt to fetch new data for the HTML view
-    console.log("FETCHING new data from Coinalyze for HTML view...");
+    // 2. Siempre intentar obtener nuevos datos para la vista HTML
+    console.log("OBTENIENDO nuevos datos de Coinalyze para la vista HTML...");
     try {
-        // Calculate timestamps just before the API call
+        // Calcular marcas de tiempo justo antes de la llamada a la API
         const now = new Date();
         now.setSeconds(0);
         now.setMilliseconds(0);
-        now.setMinutes(now.getMinutes() - 1); // Ensure last full minute
+        now.setMinutes(now.getMinutes() - 1); // Asegurar el último minuto completo
         const toTimestamp = Math.floor(now.getTime() / 1000);
-        const fromTimestamp = toTimestamp - (24 * 60 * 60); // Last 24 hours
+        const fromTimestamp = toTimestamp - (24 * 60 * 60); // Últimas 24 horas
 
-        const apiKey = "84bd6d2d-4045-4b53-8b61-151c618d4311"; // Move to env vars ideally
+        const apiKey = "84bd6d2d-4045-4b53-8b61-151c618d4311"; // Mover a variables de entorno idealmente
         const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=${apiKey}&symbols=BTCUSDT_PERP.A&interval=1min&from=${fromTimestamp}&to=${toTimestamp}&convert_to_usd=false`;
 
         const response = await fetch(url);
         if (!response.ok) {
             const errorBody = await response.text();
             console.error(`Error Coinalyze: ${response.status} ${response.statusText}`, errorBody);
-            throw new Error(`Error Coinalyze: ${response.status} ${response.statusText}. Details: ${errorBody}`);
+            throw new Error(`Error Coinalyze: ${response.status} ${response.statusText}. Detalles: ${errorBody}`);
         }
         const result = await response.json();
 
-        // Process data into a temporary array
+        // Procesar datos en un array temporal
         const currentLiquidations = [];
          if (result && Array.isArray(result)) {
             result.forEach(item => {
@@ -73,9 +73,9 @@ app.get("/liquidaciones", async (req, res) => {
                     item.history.forEach(entry => {
                         const entryDate = new Date(entry.t * 1000);
                         currentLiquidations.push({
-                            time: entryDate.toISOString(), // ISO for CSV
-                             // Using a specific locale like 'es-ES' or 'en-US' is often better for consistency
-                            timeShort: entryDate.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'medium'}), // Local format for Table
+                            time: entryDate.toISOString(), // ISO para CSV
+                             // Usar un locale específico como 'es-ES' o 'en-US' suele ser mejor para la consistencia
+                            timeShort: entryDate.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'medium'}), // Formato local para la tabla
                             long: entry.l,
                             short: entry.s
                         });
@@ -83,28 +83,28 @@ app.get("/liquidaciones", async (req, res) => {
                 }
             });
         } else {
-             console.warn("Coinalyze API returned non-array or unexpected data:", result);
+             console.warn("La API de Coinalyze devolvió datos no array o inesperados:", result);
         }
 
-        // Sort DESC (most recent first)
+        // Ordenar DESC (más recientes primero)
         currentLiquidations.sort((a, b) => new Date(b.time) - new Date(a.time));
 
-        // 3. Update Cache with the NEW data
-        liquidationsCache = [...currentLiquidations]; // Store processed data
-        lastUpdateCache = new Date();                 // Store update time
+        // 3. Actualizar Caché con los NUEVOS datos
+        liquidationsCache = [...currentLiquidations]; // Almacenar datos procesados
+        lastUpdateCache = new Date();                 // Almacenar hora de actualización
 
-        // Generate and cache CSV
+        // Generar y cachear CSV
         const csvHeader = "time,long,short";
         const csvBody = liquidationsCache
             .map(l => `${l.time},${l.long},${l.short}`)
             .join("\n");
-        csvCache = `${csvHeader}\n${csvBody}`;         // Update CSV cache
+        csvCache = `${csvHeader}\n${csvBody}`;         // Actualizar caché CSV
 
-        console.log(`FETCH COMPLETE: ${liquidationsCache.length} records processed. Cache updated.`);
+        console.log(`OBTENCIÓN COMPLETA: ${liquidationsCache.length} registros procesados. Caché actualizada.`);
 
-        // 4. Respond with HTML using the NEWLY fetched data
-        console.log("GENERATING HTML response with fresh data...");
-        const tableHeaders = ["time (local)", "long", "short"];
+        // 4. Responder con HTML usando los datos RECIÉN OBTENIDOS
+        console.log("GENERANDO respuesta HTML con datos frescos...");
+        const tableHeaders = ["fecha/hora (local)", "long", "short"]; // Cambiado header a español
         let html = `<h2>Liquidaciones BTC - Últimas 24h (Datos Actualizados)</h2>
                     <p>Última actualización (datos de esta carga): ${lastUpdateCache.toISOString()}</p>
                     <p><a href="/liquidaciones?download">Descargar CSV</a></p>`;
@@ -124,26 +124,16 @@ app.get("/liquidaciones", async (req, res) => {
             html += `</tbody></table>`;
         }
 
-        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8'); // Añadido charset=utf-8 para HTML
         return res.status(200).send(html);
 
     } catch (error) {
-        // Handle fetch or processing errors
-        console.error("ERROR during fetch/processing for HTML view:", error);
-        // Send error page, cache remains empty or as it was before the attempt
+        // Manejar errores de obtención o procesamiento
+        console.error("ERROR durante la obtención/procesamiento para la vista HTML:", error);
+        // Enviar página de error, la caché permanece vacía o como estaba antes del intento
         return res.status(500).send(`<h3>Error al obtener datos de Coinalyze</h3><pre>${error.message}</pre>`);
     }
 });
 
-// Export the app for environments like Vercel
+// Exportar la app para entornos como Vercel
 module.exports = app;
-
-// Optional: Add a local listener for testing
-/*
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-    console.log(`Test HTML view (clears cache, fetches): http://localhost:${PORT}/liquidaciones`);
-    console.log(`Test CSV download (uses cache or fails): http://localhost:${PORT}/liquidaciones?download`);
-});
-*/
