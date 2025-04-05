@@ -1,43 +1,14 @@
 // https://serversjs.vercel.app/liquidaciones
-// Esta ruta borra toda la caché y ejecuta una nueva solicitud a Coinalyze para actualizar los datos
-
-// https://serversjs.vercel.app/liquidaciones?download
-// Esta ruta sirve el archivo CSV si hay datos disponibles en caché
+// Este endpoint obtiene los datos desde Coinalyze y los muestra directamente en HTML
 
 const express = require("express");
-const fetch = require("node-fetch"); // Usar node-fetch v2
+const fetch = require("node-fetch");
 const cors = require("cors");
 
 const app = express();
 app.use(cors({ origin: "*" }));
 
-let liquidationsCache = [];
-let csvCache = "";
-let lastUpdateCache = null;
-
 app.get("/liquidaciones", async (req, res) => {
-    const download = req.query.download !== undefined;
-
-    if (download) {
-        if (!csvCache || liquidationsCache.length === 0) {
-            console.log("Descarga fallida: No hay datos en caché.");
-            return res
-                .status(400)
-                .send("No hay datos almacenados. Visita /liquidaciones primero para generarlos.");
-        }
-
-        console.log("Descargando CSV desde caché...");
-        res.setHeader("Content-Disposition", `attachment; filename="liquidaciones_btc_${Date.now()}.csv"`);
-        res.setHeader("Content-Type", "text/csv");
-        return res.send(csvCache);
-    }
-
-    console.log("Vista HTML solicitada. Reiniciando caché...");
-    // Siempre borrar caché al cargar esta ruta
-    liquidationsCache = [];
-    csvCache = "";
-    lastUpdateCache = null;
-
     try {
         const now = new Date();
         now.setSeconds(0);
@@ -58,14 +29,14 @@ app.get("/liquidaciones", async (req, res) => {
         }
 
         const data = JSON.parse(rawBody);
-        const currentLiquidations = [];
+        const liquidations = [];
 
         if (Array.isArray(data)) {
             data.forEach(item => {
                 if (Array.isArray(item.history)) {
                     item.history.forEach(entry => {
                         const d = new Date(entry.t * 1000);
-                        currentLiquidations.push({
+                        liquidations.push({
                             time: d.toISOString(),
                             timeShort: d.toLocaleString('es-ES', {
                                 dateStyle: 'short',
@@ -79,24 +50,17 @@ app.get("/liquidaciones", async (req, res) => {
             });
         }
 
-        currentLiquidations.sort((a, b) => new Date(b.time) - new Date(a.time));
+        liquidations.sort((a, b) => new Date(b.time) - new Date(a.time));
 
-        liquidationsCache = [...currentLiquidations];
-        lastUpdateCache = new Date();
-
-        const csvHeader = "time,long,short";
-        const csvBody = liquidationsCache.map(l => `${l.time},${l.long},${l.short}`).join("\n");
-        csvCache = `${csvHeader}\n${csvBody}`;
-
-        console.log(`Datos actualizados: ${liquidationsCache.length} registros.`);
+        const updatedTime = liquidations.length > 0 ? liquidations[0].time : "Sin datos";
 
         // Generar HTML
         const tableHeaders = ["fecha/hora (local)", "long", "short"];
         let html = `<h2>Liquidaciones BTC - Últimas 24h</h2>
-                    <p>Actualizado: ${lastUpdateCache.toISOString()}</p>
+                    <p>Actualizado: ${updatedTime}</p>
                     <p><a href="/liquidaciones?download">Descargar CSV</a></p>`;
 
-        if (liquidationsCache.length === 0) {
+        if (liquidations.length === 0) {
             html += `<p>No se encontraron datos.</p>`;
         } else {
             html += `<table border="1" style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px;">
@@ -104,7 +68,7 @@ app.get("/liquidaciones", async (req, res) => {
                            <tr>${tableHeaders.map(h => `<th>${h}</th>`).join('')}</tr>
                         </thead>
                         <tbody>`;
-            liquidationsCache.forEach(l => {
+            liquidations.forEach(l => {
                 html += `<tr><td>${l.timeShort}</td><td>${l.long}</td><td>${l.short}</td></tr>`;
             });
             html += `</tbody></table>`;
@@ -114,7 +78,7 @@ app.get("/liquidaciones", async (req, res) => {
         return res.status(200).send(html);
 
     } catch (err) {
-        console.error("ERROR GENERAL:", err);
+        console.error("ERROR:", err);
         return res.status(500).send(`<h3>Error inesperado</h3><pre>${err.message}</pre>`);
     }
 });
