@@ -8,22 +8,22 @@ app.use(cors({ origin: "*" }));
 // Endpoint para obtener las liquidaciones
 app.get("/liquidaciones", async (req, res) => {
     try {
-        let liquidations = []; // siempre se reinicia en cada request
+        let liquidations = [];
 
-        console.log(`llamo a Coinalyze: ${new Date().toISOString()}`);
+        console.log(`Llamo a Coinalyze: ${new Date().toISOString()}`);
 
         const now = new Date();
         now.setSeconds(0);
         now.setMilliseconds(0);
         now.setMinutes(now.getMinutes() - 1); // 1 minuto antes del actual
 
-        const to = Math.floor(now.getTime() / 1000);          // Timestamp del minuto anterior
-        const from = to - 86400;                         // 500 minutos atrás desde 'to'
+        const to = Math.floor(now.getTime() / 1000); // Timestamp del minuto anterior
+        const from = to - 86400; // 24 horas atrás
 
         console.log("From:", new Date(from * 1000).toString());
         console.log("To:  ", new Date(to * 1000).toString());
 
-        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${from}&to=${to}&convert_to_usd=false`;
+        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${from}&to=${to}&convert_to_usd=true`;
 
         const response = await fetch(url);
         const rawBody = await response.text();
@@ -34,9 +34,6 @@ app.get("/liquidaciones", async (req, res) => {
         }
 
         const data = JSON.parse(rawBody);
-
-        // Incluye la respuesta completa de la API en el HTML
-        let apiResponseHtml = `<h3>Respuesta completa de Coinalyze (texto crudo):</h3><pre>${rawBody}</pre>`;
 
         if (Array.isArray(data)) {
             data.forEach(item => {
@@ -85,9 +82,6 @@ app.get("/liquidaciones", async (req, res) => {
         let html = `<h2>Liquidaciones BTC - Últimas 24h</h2>
                     <p>Actualizado: ${updatedTime}</p>
                     <p><a href="/liquidaciones?download">Descargar CSV</a></p>`;
-
-        // Agrega la respuesta cruda de la API antes de la tabla
-        html += apiResponseHtml;
 
         if (liquidations.length === 0) {
             html += `<p>No se encontraron datos.</p>`;
