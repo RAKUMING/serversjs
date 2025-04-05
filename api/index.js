@@ -17,7 +17,7 @@ app.get("/liquidaciones", async (req, res) => {
         now.setMilliseconds(0);
         now.setMinutes(now.getMinutes() - 1);
         const to = Math.floor(now.getTime() / 1000);
-        const from = to - 86400;
+        const from = to - 172800;
 
         const apiKey = "84bd6d2d-4045-4b53-8b61-151c618d4311";
         const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${fromTimestamp}&to=${toTimestamp}&convert_to_usd=false`;
