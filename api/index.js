@@ -5,13 +5,12 @@ const cors = require("cors");
 const app = express();
 app.use(cors({ origin: "*" }));
 
-let liquidations = []; // Se reinicia en cada request
-
 // Endpoint para obtener las liquidaciones
 app.get("/liquidaciones", async (req, res) => {
     try {
-        // Limpiar datos al inicio de cada request
-        liquidations = [];
+        let liquidations = []; // siempre se reinicia en cada request
+
+        console.log(`[API FETCH] Nueva llamada a Coinalyze: ${new Date().toISOString()}`);
 
         const now = new Date();
         now.setSeconds(0);
@@ -55,13 +54,14 @@ app.get("/liquidaciones", async (req, res) => {
         liquidations.sort((a, b) => new Date(b.time) - new Date(a.time));
         const updatedTime = liquidations.length > 0 ? liquidations[0].time : "Sin datos";
 
-        // Encabezados para desactivar caché
+        // Headers para evitar cache
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
         res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
         res.setHeader("Pragma", "no-cache");
         res.setHeader("Expires", "0");
         res.setHeader("Surrogate-Control", "no-store");
 
-        // CSV si se pasa ?download
+        // CSV si ?download
         if (req.query.download !== undefined) {
             const csvHeaders = "fecha/hora (local),long,short";
             const csvRows = liquidations.map(l =>
@@ -75,7 +75,6 @@ app.get("/liquidaciones", async (req, res) => {
         }
 
         // HTML
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
         const tableHeaders = ["fecha/hora (local)", "long", "short"];
         let html = `<h2>Liquidaciones BTC - Últimas 24h</h2>
                     <p>Actualizado: ${updatedTime}</p>
