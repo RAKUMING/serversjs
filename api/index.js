@@ -20,7 +20,7 @@ app.get("/liquidaciones", async (req, res) => {
         const from = to - 86400;
 
         const apiKey = "84bd6d2d-4045-4b53-8b61-151c618d4311";
-        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=${apiKey}&symbols=BTCUSDT_PERP.A&interval=15min&from=${from}&to=${to}&convert_to_usd=false&t=${Date.now()}`;
+        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=${apiKey}&symbols=BTCUSDT_PERP.A&interval=1hour&from=${from}&to=${to}&convert_to_usd=false&t=${Date.now()}`;
 
         const response = await fetch(url);
         const rawBody = await response.text();
