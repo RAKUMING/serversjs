@@ -15,12 +15,12 @@ app.get("/liquidaciones", async (req, res) => {
         now.setMinutes(now.getMinutes() - 1); // 1 minuto antes del actual
 
         const to = Math.floor(now.getTime() / 1000); // Timestamp del minuto anterior
-        const from = to - 86400; // 24 horas atrás
+        const from = to - 30000; // 500 minutos atrás
 
         console.log("From:", new Date(from * 1000).toString());
         console.log("To:  ", new Date(to * 1000).toString());
 
-        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${from}&to=${to}&convert_to_usd=false`;
+        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${from}&to=${to}&convert_to_usd=true`;
 
         const response = await fetch(url);
         const rawBody = await response.text();
