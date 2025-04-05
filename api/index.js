@@ -5,11 +5,14 @@ const cors = require("cors");
 const app = express();
 app.use(cors({ origin: "*" }));
 
-let liquidations = [];  // Variable en memoria para almacenar las liquidaciones
+let liquidations = []; // Se reinicia en cada request
 
 // Endpoint para obtener las liquidaciones
 app.get("/liquidaciones", async (req, res) => {
     try {
+        // Limpiar datos al inicio de cada request
+        liquidations = [];
+
         const now = new Date();
         now.setSeconds(0);
         now.setMilliseconds(0);
@@ -18,7 +21,7 @@ app.get("/liquidaciones", async (req, res) => {
         const from = to - 86400;
 
         const apiKey = "84bd6d2d-4045-4b53-8b61-151c618d4311";
-        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=${apiKey}&symbols=BTCUSDT_PERP.A&interval=1min&from=${from}&to=${to}&convert_to_usd=false`;
+        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=${apiKey}&symbols=BTCUSDT_PERP.A&interval=1min&from=${from}&to=${to}&convert_to_usd=false&t=${Date.now()}`;
 
         const response = await fetch(url);
         const rawBody = await response.text();
@@ -29,7 +32,6 @@ app.get("/liquidaciones", async (req, res) => {
         }
 
         const data = JSON.parse(rawBody);
-        liquidations = [];  // Limpiar los datos de liquidaciones antes de agregar los nuevos
 
         if (Array.isArray(data)) {
             data.forEach(item => {
@@ -51,10 +53,29 @@ app.get("/liquidaciones", async (req, res) => {
         }
 
         liquidations.sort((a, b) => new Date(b.time) - new Date(a.time));
-
         const updatedTime = liquidations.length > 0 ? liquidations[0].time : "Sin datos";
 
-        // Generar HTML
+        // Encabezados para desactivar caché
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Expires", "0");
+        res.setHeader("Surrogate-Control", "no-store");
+
+        // CSV si se pasa ?download
+        if (req.query.download !== undefined) {
+            const csvHeaders = "fecha/hora (local),long,short";
+            const csvRows = liquidations.map(l =>
+                `"${l.timeShort}",${l.long},${l.short}`
+            );
+            const csvContent = [csvHeaders, ...csvRows].join("\n");
+
+            res.setHeader("Content-Type", "text/csv");
+            res.setHeader("Content-Disposition", "attachment; filename=liquidaciones.csv");
+            return res.send(csvContent);
+        }
+
+        // HTML
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
         const tableHeaders = ["fecha/hora (local)", "long", "short"];
         let html = `<h2>Liquidaciones BTC - Últimas 24h</h2>
                     <p>Actualizado: ${updatedTime}</p>
@@ -74,23 +95,11 @@ app.get("/liquidaciones", async (req, res) => {
             html += `</tbody></table>`;
         }
 
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
         return res.status(200).send(html);
 
     } catch (err) {
         console.error("ERROR:", err);
         return res.status(500).send(`<h3>Error inesperado</h3><pre>${err.message}</pre>`);
-    }
-});
-
-// Endpoint para reiniciar los datos
-app.get("/reset", (req, res) => {
-    try {
-        liquidations = [];  // Limpiar el array de liquidaciones
-        res.status(200).send('<h3>Datos de liquidaciones reiniciados con éxito.</h3>');
-    } catch (err) {
-        console.error("ERROR al reiniciar:", err);
-        return res.status(500).send(`<h3>Error al reiniciar los datos</h3><pre>${err.message}</pre>`);
     }
 });
 
