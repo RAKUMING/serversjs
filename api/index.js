@@ -10,17 +10,21 @@ app.get("/liquidaciones", async (req, res) => {
     try {
         let liquidations = []; // siempre se reinicia en cada request
 
-        console.log(`[API FETCH] Nueva llamada a Coinalyze: ${new Date().toISOString()}`);
+        console.log(`llamo a Coinalyze: ${new Date().toISOString()}`);
 
-        const now = new Date();
-        now.setSeconds(0);
-        now.setMilliseconds(0);
-        now.setMinutes(now.getMinutes() - 1);
-        const to = Math.floor(now.getTime() / 1000);
-        const from = to - 172800;
+const now = new Date();
+now.setSeconds(0);
+now.setMilliseconds(0);
+now.setMinutes(now.getMinutes() - 1); // 1 minuto antes del actual
 
-        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=60&to=1743659999&convert_to_usd=false`;
-       // const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${fromTimestamp}&to=${toTimestamp}&convert_to_usd=false`;
+const to = Math.floor(now.getTime() / 1000);          // Timestamp del minuto anterior
+const from = to - (500 * 60);                         // 500 minutos atrás desde 'to'
+
+console.log("From:", new Date(from * 1000).toString());
+console.log("To:  ", new Date(to * 1000).toString());
+
+       // const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=60&to=1743659999&convert_to_usd=false`;
+        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${fromTimestamp}&to=${toTimestamp}&convert_to_usd=false`;
 
         const response = await fetch(url);
         const rawBody = await response.text();
