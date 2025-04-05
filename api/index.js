@@ -18,7 +18,7 @@ app.get("/liquidaciones", async (req, res) => {
         now.setMinutes(now.getMinutes() - 1); // 1 minuto antes del actual
 
         const to = Math.floor(now.getTime() / 1000);          // Timestamp del minuto anterior
-        const from = to - (500 * 60);                         // 500 minutos atrás desde 'to'
+        const from = to - 86400;                         // 500 minutos atrás desde 'to'
 
         console.log("From:", new Date(from * 1000).toString());
         console.log("To:  ", new Date(to * 1000).toString());
