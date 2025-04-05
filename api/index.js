@@ -1,6 +1,3 @@
-// https://serversjs.vercel.app/liquidaciones
-// Este endpoint obtiene los datos desde Coinalyze y los muestra directamente en HTML
-
 const express = require("express");
 const fetch = require("node-fetch");
 const cors = require("cors");
@@ -8,6 +5,9 @@ const cors = require("cors");
 const app = express();
 app.use(cors({ origin: "*" }));
 
+let liquidations = [];  // Variable en memoria para almacenar las liquidaciones
+
+// Endpoint para obtener las liquidaciones
 app.get("/liquidaciones", async (req, res) => {
     try {
         const now = new Date();
@@ -29,7 +29,7 @@ app.get("/liquidaciones", async (req, res) => {
         }
 
         const data = JSON.parse(rawBody);
-        const liquidations = [];
+        liquidations = [];  // Limpiar los datos de liquidaciones antes de agregar los nuevos
 
         if (Array.isArray(data)) {
             data.forEach(item => {
@@ -80,6 +80,17 @@ app.get("/liquidaciones", async (req, res) => {
     } catch (err) {
         console.error("ERROR:", err);
         return res.status(500).send(`<h3>Error inesperado</h3><pre>${err.message}</pre>`);
+    }
+});
+
+// Endpoint para reiniciar los datos
+app.get("/reset", (req, res) => {
+    try {
+        liquidations = [];  // Limpiar el array de liquidaciones
+        res.status(200).send('<h3>Datos de liquidaciones reiniciados con éxito.</h3>');
+    } catch (err) {
+        console.error("ERROR al reiniciar:", err);
+        return res.status(500).send(`<h3>Error al reiniciar los datos</h3><pre>${err.message}</pre>`);
     }
 });
 
