@@ -20,7 +20,7 @@ app.get("/liquidaciones", async (req, res) => {
         const from = to - 86400;
 
         const apiKey = "84bd6d2d-4045-4b53-8b61-151c618d4311";
-        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=${apiKey}&symbols=BTCUSDT_PERP.A&interval=1hour&from=${from}&to=${to}&convert_to_usd=false&t=${Date.now()}`;
+        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=${apiKey}&symbols=BTCUSDT_PERP.A&interval=1min&from=${from}&to=${to}&convert_to_usd=false&t=${Date.now()}`;
 
         const response = await fetch(url);
         const rawBody = await response.text();
@@ -31,6 +31,9 @@ app.get("/liquidaciones", async (req, res) => {
         }
 
         const data = JSON.parse(rawBody);
+
+        // Incluye la respuesta completa de la API en el HTML
+        let apiResponseHtml = `<h3>Respuesta completa de Coinalyze (texto crudo):</h3><pre>${rawBody}</pre>`;
 
         if (Array.isArray(data)) {
             data.forEach(item => {
@@ -79,6 +82,9 @@ app.get("/liquidaciones", async (req, res) => {
         let html = `<h2>Liquidaciones BTC - Últimas 24h</h2>
                     <p>Actualizado: ${updatedTime}</p>
                     <p><a href="/liquidaciones?download">Descargar CSV</a></p>`;
+
+        // Agrega la respuesta cruda de la API antes de la tabla
+        html += apiResponseHtml;
 
         if (liquidations.length === 0) {
             html += `<p>No se encontraron datos.</p>`;
