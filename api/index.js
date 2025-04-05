@@ -5,11 +5,8 @@ const cors = require("cors");
 const app = express();
 app.use(cors({ origin: "*" }));
 
-// Endpoint para obtener las liquidaciones
 app.get("/liquidaciones", async (req, res) => {
     try {
-        let liquidations = [];
-
         console.log(`Llamo a Coinalyze: ${new Date().toISOString()}`);
 
         const now = new Date();
@@ -23,7 +20,7 @@ app.get("/liquidaciones", async (req, res) => {
         console.log("From:", new Date(from * 1000).toString());
         console.log("To:  ", new Date(to * 1000).toString());
 
-        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${from}&to=${to}&convert_to_usd=true`;
+        const url = `https://api.coinalyze.net/v1/liquidation-history?api_key=84bd6d2d-4045-4b53-8b61-151c618d4311&symbols=BTCUSDT_PERP.A&interval=1min&from=${from}&to=${to}&convert_to_usd=false`;
 
         const response = await fetch(url);
         const rawBody = await response.text();
@@ -34,18 +31,14 @@ app.get("/liquidaciones", async (req, res) => {
         }
 
         const data = JSON.parse(rawBody);
+        const liquidationMap = new Map();
 
         if (Array.isArray(data)) {
             data.forEach(item => {
                 if (Array.isArray(item.history)) {
                     item.history.forEach(entry => {
-                        const d = new Date(entry.t * 1000);
-                        liquidations.push({
-                            time: d.toISOString(),
-                            timeShort: d.toLocaleString('es-ES', {
-                                dateStyle: 'short',
-                                timeStyle: 'medium'
-                            }),
+                        const timestamp = entry.t * 1000;
+                        liquidationMap.set(timestamp, {
                             long: entry.l,
                             short: entry.s
                         });
@@ -54,20 +47,36 @@ app.get("/liquidaciones", async (req, res) => {
             });
         }
 
-        liquidations.sort((a, b) => new Date(b.time) - new Date(a.time));
-        const updatedTime = liquidations.length > 0 ? liquidations[0].time : "Sin datos";
+        // Procesar todos los minutos entre from y to
+        const processedLiquidations = [];
+        for (let t = from * 1000; t <= to * 1000; t += 60000) {
+            const date = new Date(t);
+            const entry = liquidationMap.get(t) || { long: 0.01, short: 0.01 };
+
+            processedLiquidations.push({
+                timestamp: t,
+                time: date.toISOString(),
+                timeShort: date.toLocaleString('es-ES', {
+                    dateStyle: 'short',
+                    timeStyle: 'medium'
+                }),
+                long: entry.long,
+                short: entry.short
+            });
+        }
+
+        const updatedTime = processedLiquidations.length > 0 ? processedLiquidations.at(-1).time : "Sin datos";
 
         // Headers para evitar cache
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
         res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
         res.setHeader("Pragma", "no-cache");
         res.setHeader("Expires", "0");
         res.setHeader("Surrogate-Control", "no-store");
 
-        // CSV si ?download
+        // CSV
         if (req.query.download !== undefined) {
             const csvHeaders = "fecha/hora (local),long,short";
-            const csvRows = liquidations.map(l =>
+            const csvRows = processedLiquidations.map(l =>
                 `"${l.timeShort}",${l.long},${l.short}`
             );
             const csvContent = [csvHeaders, ...csvRows].join("\n");
@@ -78,12 +87,14 @@ app.get("/liquidaciones", async (req, res) => {
         }
 
         // HTML
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+
         const tableHeaders = ["fecha/hora (local)", "long", "short"];
         let html = `<h2>Liquidaciones BTC - Últimas 24h</h2>
                     <p>Actualizado: ${updatedTime}</p>
                     <p><a href="/liquidaciones?download">Descargar CSV</a></p>`;
 
-        if (liquidations.length === 0) {
+        if (processedLiquidations.length === 0) {
             html += `<p>No se encontraron datos.</p>`;
         } else {
             html += `<table border="1" style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px;">
@@ -91,7 +102,7 @@ app.get("/liquidaciones", async (req, res) => {
                            <tr>${tableHeaders.map(h => `<th>${h}</th>`).join('')}</tr>
                         </thead>
                         <tbody>`;
-            liquidations.forEach(l => {
+            processedLiquidations.forEach(l => {
                 html += `<tr><td>${l.timeShort}</td><td>${l.long}</td><td>${l.short}</td></tr>`;
             });
             html += `</tbody></table>`;
