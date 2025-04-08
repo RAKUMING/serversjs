@@ -7,7 +7,6 @@ app.use(cors({ origin: "*" }));
 
 
 
-
 // Página principal ("/")
 app.get("/", (req, res) => {
     res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -21,107 +20,118 @@ app.get("/", (req, res) => {
             <style>
                 body {
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    line-height: 1.6;
+                    line-height: 1.5;
                     margin: 0;
                     padding: 0;
-                    color: #333;
-                    background-color: #f8f9fa;
+                    color: #e6e6e6;
+                    background-color: #222;
                 }
                 .container {
-                    max-width: 1000px;
+                    max-width: 800px;
                     margin: 0 auto;
-                    padding: 40px 20px;
+                    padding: 25px 15px;
                 }
                 header {
-                    background-color: #1a1a2e;
+                    background-color: #111;
                     color: white;
-                    padding: 30px 0;
+                    padding: 20px 0;
                     border-radius: 8px 8px 0 0;
                     text-align: center;
-                    margin-bottom: 30px;
+                    margin-bottom: 20px;
+                    border-bottom: 2px solid #e2b714;
                 }
                 h1 {
                     margin: 0;
-                    font-size: 2.5em;
+                    font-size: 2em;
                 }
                 .subtitle {
                     color: #e2b714;
                     font-weight: 300;
+                    margin-top: 5px;
+                    margin-bottom: 0;
                 }
                 h2 {
-                    border-bottom: 2px solid #e2b714;
-                    padding-bottom: 10px;
-                    margin-top: 40px;
-                    color: #1a1a2e;
+                    border-bottom: 1px solid #e2b714;
+                    padding-bottom: 8px;
+                    margin-top: 25px;
+                    color: #e2b714;
+                    font-size: 1.5em;
                 }
                 .description {
-                    background-color: white;
-                    padding: 20px;
+                    background-color: #333;
+                    padding: 15px;
                     border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-                .endpoint-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                    gap: 20px;
-                    margin-top: 20px;
+                    margin-bottom: 20px;
                 }
                 .endpoint-card {
-                    background-color: white;
+                    background-color: #333;
                     border-radius: 8px;
-                    padding: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    transition: transform 0.3s ease, box-shadow 0.3s ease;
-                }
-                .endpoint-card:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                    padding: 15px 20px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    margin-bottom: 20px;
                 }
                 .endpoint-title {
                     font-size: 1.2em;
-                    color: #1a1a2e;
+                    color: #e2b714;
                     margin-top: 0;
-                    margin-bottom: 15px;
-                    border-bottom: 1px solid #eee;
-                    padding-bottom: 10px;
+                    margin-bottom: 12px;
+                    border-bottom: 1px solid #444;
+                    padding-bottom: 8px;
+                }
+                .endpoints-list {
+                    list-style-type: none;
+                    padding: 0;
+                    margin: 0;
+                }
+                .endpoints-list li {
+                    padding: 8px 5px;
+                    border-bottom: 1px solid #444;
+                }
+                .endpoints-list li:last-child {
+                    border-bottom: none;
                 }
                 .endpoint-url {
-                    background-color: #f8f9fa;
-                    padding: 10px;
-                    border-radius: 5px;
-                    margin-bottom: 15px;
                     font-family: monospace;
-                    word-break: break-all;
+                    background-color: #222;
+                    padding: 6px 10px;
+                    border-radius: 4px;
+                    display: inline-block;
+                    margin-right: 10px;
                 }
                 .endpoint-url a {
-                    color: #0066cc;
+                    color: #5c9ce6;
                     text-decoration: none;
                 }
                 .endpoint-url a:hover {
                     text-decoration: underline;
+                    color: #7fb3f5;
                 }
-                .endpoint-description {
-                    color: #555;
-                    font-size: 0.95em;
-                }
-                .download-option {
-                    margin-top: 10px;
+                .endpoint-period {
+                    color: #aaa;
                     font-size: 0.9em;
-                    color: #666;
+                    display: inline-block;
                 }
-                .download-option code {
-                    background-color: #f1f1f1;
+                .download-note {
+                    background-color: #2a2a2a;
+                    padding: 12px;
+                    border-radius: 6px;
+                    margin-top: 15px;
+                    font-size: 0.95em;
+                    border-left: 3px solid #e2b714;
+                }
+                .download-note code {
+                    background-color: #222;
                     padding: 2px 5px;
                     border-radius: 3px;
+                    color: #5c9ce6;
                 }
                 footer {
-                    margin-top: 50px;
+                    margin-top: 30px;
                     text-align: center;
-                    color: #777;
-                    font-size: 0.9em;
-                    padding: 20px;
-                    background-color: #1a1a2e;
-                    color: white;
+                    color: #888;
+                    font-size: 0.85em;
+                    padding: 15px;
+                    background-color: #111;
                     border-radius: 0 0 8px 8px;
                 }
                 .btc-icon {
@@ -134,121 +144,60 @@ app.get("/", (req, res) => {
             <div class="container">
                 <header>
                     <h1>API de Liquidaciones BTC <span class="btc-icon">₿</span></h1>
-                    <p class="subtitle">Datos en tiempo real de Coinalyze para BTCUSDT en Binance</p>
+                    <p class="subtitle">Datos en tiempo real desde Coinalyze</p>
                 </header>
                 
                 <div class="description">
-                    <p>Este servicio proporciona acceso a datos de <strong>liquidaciones long y short</strong> 
-                    de BTCUSDT en Binance (futuros perpetuos) extraídos de la API pública de 
-                    <a href="https://coinalyze.net" target="_blank">Coinalyze</a>.</p>
-                    
-                    <p>Utiliza los endpoints a continuación para consultar datos en diferentes intervalos de tiempo.</p>
+                    <p>Accede a datos de <strong>liquidaciones long y short</strong> de BTCUSDT en Binance (futuros perpetuos) extraídos de la API pública de <a href="https://coinalyze.net" target="_blank" style="color:#5c9ce6">Coinalyze</a>.</p>
                 </div>
                 
-                <h2>Endpoints Disponibles</h2>
+                <div class="endpoint-card">
+                    <h3 class="endpoint-title">Endpoints Disponibles</h3>
+                    <ul class="endpoints-list">
+                        <li>
+                            <div class="endpoint-url"><a href="https://liquidacionesjs.vercel.app/liquidaciones1min" target="_blank">/liquidaciones1min</a></div>
+                            <span class="endpoint-period">Datos por minuto</span>
+                        </li>
+                        <li>
+                            <div class="endpoint-url"><a href="https://liquidacionesjs.vercel.app/liquidaciones5min" target="_blank">/liquidaciones5min</a></div>
+                            <span class="endpoint-period">Intervalos de 5 minutos</span>
+                        </li>
+                        <li>
+                            <div class="endpoint-url"><a href="https://liquidacionesjs.vercel.app/liquidaciones15min" target="_blank">/liquidaciones15min</a></div>
+                            <span class="endpoint-period">Intervalos de 15 minutos</span>
+                        </li>
+                        <li>
+                            <div class="endpoint-url"><a href="https://liquidacionesjs.vercel.app/liquidaciones1hour" target="_blank">/liquidaciones1hour</a></div>
+                            <span class="endpoint-period">Datos por hora</span>
+                        </li>
+                        <li>
+                            <div class="endpoint-url"><a href="https://liquidacionesjs.vercel.app/liquidaciones4hour" target="_blank">/liquidaciones4hour</a></div>
+                            <span class="endpoint-period">Bloques de 4 horas</span>
+                        </li>
+                        <li>
+                            <div class="endpoint-url"><a href="https://liquidacionesjs.vercel.app/liquidacionesdaily" target="_blank">/liquidacionesdaily</a></div>
+                            <span class="endpoint-period">Resumen diario</span>
+                        </li>
+                    </ul>
+                    
+                    <div class="download-note">
+                        <strong>Nota:</strong> Añade el parámetro <code>?download</code> a cualquier URL para descargar los datos en formato CSV.<br>
+                        Ejemplo: <code>https://liquidacionesjs.vercel.app/liquidaciones1min?download</code>
+                    </div>
+                </div>
                 
-                <div class="endpoint-grid">
-                    <div class="endpoint-card">
-                        <h3 class="endpoint-title">Liquidaciones por Minuto</h3>
-                        <div class="endpoint-url">
-                            <a href="https://liquidacionesjs.vercel.app/liquidaciones1min" target="_blank">
-                                /liquidaciones1min
-                            </a>
-                        </div>
-                        <div class="endpoint-description">
-                            Resumen de liquidaciones minuto a minuto durante los últimos 500 minutos.
-                            <div class="download-option">
-                                Descargar como CSV: <code><a href="https://liquidacionesjs.vercel.app/liquidaciones1min?download" target="_blank">/liquidaciones1min?download</a></code>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="endpoint-card">
-                        <h3 class="endpoint-title">Liquidaciones cada 5 Minutos</h3>
-                        <div class="endpoint-url">
-                            <a href="https://liquidacionesjs.vercel.app/liquidaciones5min" target="_blank">
-                                /liquidaciones5min
-                            </a>
-                        </div>
-                        <div class="endpoint-description">
-                            Datos consolidados por intervalos de 5 minutos.
-                            <div class="download-option">
-                                Descargar como CSV: <code><a href="https://liquidacionesjs.vercel.app/liquidaciones5min?download" target="_blank">/liquidaciones5min?download</a></code>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="endpoint-card">
-                        <h3 class="endpoint-title">Liquidaciones cada 15 Minutos</h3>
-                        <div class="endpoint-url">
-                            <a href="https://liquidacionesjs.vercel.app/liquidaciones15min" target="_blank">
-                                /liquidaciones15min
-                            </a>
-                        </div>
-                        <div class="endpoint-description">
-                            Datos consolidados por intervalos de 15 minutos.
-                            <div class="download-option">
-                                Descargar como CSV: <code><a href="https://liquidacionesjs.vercel.app/liquidaciones15min?download" target="_blank">/liquidaciones15min?download</a></code>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="endpoint-card">
-                        <h3 class="endpoint-title">Liquidaciones Horarias</h3>
-                        <div class="endpoint-url">
-                            <a href="https://liquidacionesjs.vercel.app/liquidaciones1hour" target="_blank">
-                                /liquidaciones1hour
-                            </a>
-                        </div>
-                        <div class="endpoint-description">
-                            Resumen de liquidaciones por hora.
-                            <div class="download-option">
-                                Descargar como CSV: <code><a href="https://liquidacionesjs.vercel.app/liquidaciones1hour?download" target="_blank">/liquidaciones1hour?download</a></code>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="endpoint-card">
-                        <h3 class="endpoint-title">Liquidaciones cada 4 Horas</h3>
-                        <div class="endpoint-url">
-                            <a href="https://liquidacionesjs.vercel.app/liquidaciones4hour" target="_blank">
-                                /liquidaciones4hour
-                            </a>
-                        </div>
-                        <div class="endpoint-description">
-                            Datos consolidados por bloques de 4 horas.
-                            <div class="download-option">
-                                Descargar como CSV: <code><a href="https://liquidacionesjs.vercel.app/liquidaciones4hour?download" target="_blank">/liquidaciones4hour?download</a></code>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="endpoint-card">
-                        <h3 class="endpoint-title">Liquidaciones Diarias</h3>
-                        <div class="endpoint-url">
-                            <a href="https://liquidacionesjs.vercel.app/liquidacionesdaily" target="_blank">
-                                /liquidacionesdaily
-                            </a>
-                        </div>
-                        <div class="endpoint-description">
-                            Resumen de liquidaciones por día.
-                            <div class="download-option">
-                                Descargar como CSV: <code><a href="https://liquidacionesjs.vercel.app/liquidacionesdaily?download" target="_blank">/liquidacionesdaily?download</a></code>
-                            </div>
-                        </div>
-                    </div>
+                <div class="description">
+                    <p>Esta API muestra las liquidaciones de posiciones long (compra) y short (venta) en el mercado de futuros de Bitcoin, permitiendo analizar la presión del mercado en diferentes intervalos de tiempo. Los datos son presentados en formato tabular o pueden descargarse como CSV para análisis más detallados.</p>
                 </div>
                 
                 <footer>
-                    <p>API de Liquidaciones Bitcoin &copy; 2025 | Desarrollado con Node.js + Express | Datos proporcionados por Coinalyze</p>
+                    <p>API de Liquidaciones Bitcoin &copy; 2025 | Desarrollado con Node.js + Express</p>
                 </footer>
             </div>
         </body>
         </html>
     `);
 });
-
-
 
 
 app.get("/liquidaciones", async (req, res) => {
