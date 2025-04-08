@@ -16,7 +16,7 @@ app.get("/", (req, res) => {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>API de Liquidaciones BTC - Coinalyze</title>
+            <title>API de Liquidaciones</title>
             <style>
                 body {
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -143,7 +143,7 @@ app.get("/", (req, res) => {
         <body>
             <div class="container">
                 <header>
-                    <h1>API de Liquidaciones BTC <span class="btc-icon">₿</span></h1>
+                    <h1>API de Liquidaciones <span class="btc-icon">₿</span></h1>
                     <p class="subtitle">Datos en tiempo real desde Coinalyze</p>
                 </header>
                 
@@ -187,11 +187,11 @@ app.get("/", (req, res) => {
                 </div>
                 
                 <div class="description">
-                    <p>Esta API muestra las liquidaciones de posiciones long (compra) y short (venta) en el mercado de futuros de Bitcoin, permitiendo analizar la presión del mercado en diferentes intervalos de tiempo. Los datos son presentados en formato tabular o pueden descargarse como CSV para análisis más detallados.</p>
+                    <p>Esta API muestra las liquidaciones de posiciones long (compra) y short (venta) en el mercado de futuros, permitiendo analizar la presión del mercado en diferentes intervalos de tiempo. Los datos son presentados en formato tabular o pueden descargarse como CSV para análisis más detallados.</p>
                 </div>
                 
                 <footer>
-                    <p>API de Liquidaciones Bitcoin &copy; 2025 | Desarrollado con Node.js + Express</p>
+                    <p>API de Liquidaciones &copy; 2025 | Desarrollado con Node.js + Express +python ,serversj.xxx</p>
                 </footer>
             </div>
         </body>
