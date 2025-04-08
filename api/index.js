@@ -5,6 +5,33 @@ const cors = require("cors");
 const app = express();
 app.use(cors({ origin: "*" }));
 
+
+
+
+
+// Página principal ("/")
+app.get("/", (req, res) => {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(`
+        <h1>API de Liquidaciones BTC (Coinalyze)</h1>
+        <p>Este servidor proporciona una interfaz para consultar las <strong>liquidaciones long y short</strong> de BTCUSDT en Binance (futuros perpetuos) usando datos desde la API pública de <a href="https://coinalyze.net" target="_blank">Coinalyze</a>.</p>
+        <h2>Endpoint disponible</h2>
+        <ul>
+            <li>
+                <a href="/liquidaciones">/liquidaciones</a><br>
+                Devuelve un resumen de las liquidaciones minuto a minuto durante las últimas 500 minutos.<br>
+                Muestra los datos en una tabla HTML.<br>
+                <strong>Parámetro opcional:</strong> <code>?download</code> para descargar como archivo CSV.<br>
+                Ejemplo: <a href="/liquidaciones?download">/liquidaciones?download</a>
+            </li>
+        </ul>
+        <p style="margin-top: 2em; font-size: 0.9em; color: #777;">Desarrollado con Node.js + Express</p>
+    `);
+});
+
+
+
+
 app.get("/liquidaciones", async (req, res) => {
     try {
         console.log(`Llamo a Coinalyze: ${new Date().toISOString()}`);
